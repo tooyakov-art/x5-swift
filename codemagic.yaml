@@ -35,22 +35,13 @@ workflows:
           echo "Certificate size:"
           ls -l /tmp/certificate.p12
           
-          echo "Debugging Password:"
-          echo "Password length: ${#CM_CERTIFICATE_PASSWORD}"
-          if [ -z "$CM_CERTIFICATE_PASSWORD" ]; then echo "Password IS EMPTY"; else echo "Password IS NOT EMPTY"; fi
-          
-          # Add to Keychain with fallback check
-          echo "Attempting import with provided password..."
-          if keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"; then
-              echo "Certificate imported successfully."
+          # Try the user-provided password "AgKya8zc" directly
+          echo "Attempting to import with password 'AgKya8zc'..."
+          if keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password "AgKya8zc"; then
+              echo "Certificate imported successfully with hardcoded password."
           else
-              echo "Import failed. Trying with EMPTY password..."
-              if keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password ""; then
-                  echo "Certificate imported with empty password."
-              else
-                  echo "Failed to import certificate. Double check the P12 file and password."
-                  exit 1
-              fi
+              echo "All passwords failed."
+              exit 1
           fi
           
           echo "Fetching profiles..."
