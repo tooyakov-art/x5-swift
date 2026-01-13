@@ -50,11 +50,16 @@ workflows:
           echo "Verifying clean state..."
           app-store-connect certificates list --type DISTRIBUTION || true
           
-          echo "Creating new certificate..."
-          app-store-connect fetch-signing-files "com.x5.myapp" --type IOS_APP_STORE --create
+          echo "Creating new certificate and saving key locally..."
+          # Save private key explicitly to avoid system keychain issues
+          app-store-connect fetch-signing-files "com.x5.myapp" --type IOS_APP_STORE --create --save-key private_key.p12
+          
+          echo "Certificate created."
+          ls -la private_key.p12
       - name: Add certificates to keychain
         script: |
-          keychain add-certificates
+          # Add the explicitly saved key
+          keychain add-certificates --certificate private_key.p12
       - name: Set up signing in Xcode project
         script: |
           xcode-project use-profiles
