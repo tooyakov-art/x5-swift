@@ -21,41 +21,20 @@ workflows:
         script: |
           # pod install
           echo "No pods to install yet"
-      - name: Configure Signing (Manual OpenSSL)
+      - name: Configure Signing (Env Vars)
         script: |
-          # 1. Initialize Keychain
+          # Initialize keychain
           keychain initialize
           
-          # 2. Cleanup old certs if any
-          echo "Cleaning up..."
-          IDS=$(app-store-connect certificates list --type DISTRIBUTION | grep -E '^[|] [A-Z0-9]{10} ' | awk '{print $2}')
-          for id in $IDS; do
-             app-store-connect certificates delete "$id" || true
-          done
+          # Decode P12 from Environment Variable
+          echo $CM_CERTIFICATE | base64 --decode > /tmp/certificate.p12
           
-          echo "Waiting 20s for propagation..."
-          sleep 20
+          # Add to Keychain
+          keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
           
-          # 3. Generate Private Key manually using OpenSSL
-          echo "Generating Private Key..."
-          openssl genrsa -out dist.key 2048
-          
-          # 4. Generate CSR manually
-          echo "Generating CSR..."
-          # Note: CN must match the name in Apple Developer Portal, but for distribution certs it's often automatic
-          openssl req -new -key dist.key -out dist.csr -subj "/emailAddress=tooyakov@icloud.com/CN=Adilkhan Seidakhmetov/C=KZ"
-          
-          # 5. Submit CSR to Apple to create certificate
-          echo "Submitting CSR to Apple..."
-          app-store-connect certificates create --csr-file dist.csr --type IOS_DISTRIBUTION --save-certificate dist.cer
-          
-          # 6. Create P12 file
-          echo "Creating P12..."
-          openssl pkcs12 -export -inkey dist.key -in dist.cer -out dist.p12 -passout pass:12345
-          
-          # 7. Add to Keychain
-          echo "Importing to Keychain..."
-          keychain add-certificates --certificate dist.p12 --certificate-password 12345
+          echo "Certificate imported. Fetching profiles..."
+          # Fetch profiles only (using the cert we just imported)
+          app-store-connect fetch-signing-files "com.x5.myapp" --type IOS_APP_STORE
           
       - name: Set up signing in Xcode project
         script: |
