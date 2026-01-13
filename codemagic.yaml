@@ -45,17 +45,31 @@ workflows:
           fi
           
           echo "Fetching profiles..."
-          # Since --ignore-existing-certificates is invalid, we will let it fail but catch the error
-          # The goal is to ensure PROFILES are downloaded. The cert part might fail (redundant), but profiles should be OK.
-          app-store-connect fetch-signing-files "com.x5.myapp" --type IOS_APP_STORE || true
+          echo "Fetching profiles..."
+          # Fetch profiles fallback
+          app-store-connect fetch-signing-files "com.x5.myapp" --type IOS_APP_STORE --ignore-existing-certificates || true
+          
+          # MANUAL PROFILE INJECTION
+          if [ ! -z "$CM_PROVISIONING_PROFILE" ]; then
+              echo "Found CM_PROVISIONING_PROFILE. Decoding..."
+              PROFILE_PATH="$HOME/Library/MobileDevice/Provisioning Profiles/manual.mobileprovision"
+              mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+              echo "$CM_PROVISIONING_PROFILE" | openssl base64 -d -A -out "$PROFILE_PATH"
+              echo "Manual profile installed at $PROFILE_PATH"
+          else
+              echo "No CM_PROVISIONING_PROFILE variable found."
+          fi
           
           echo "Verifying profiles..."
-          ls -R ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles found in default location"
+          ls -R ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles found"
           
       - name: Set up signing in Xcode project
         script: |
-          # Ensure xcode-project sees the profiles
           xcode-project use-profiles --warn-only
+      
+      - name: Debug Project
+        script: |
+          xcodebuild -list -project "$XCODE_PROJECT"
       - name: Build IPA
         script: |
           xcode-project build-ipa \
