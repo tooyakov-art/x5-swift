@@ -42,8 +42,15 @@ workflows:
              # Try positional argument since --id was unrecognized
              app-store-connect certificates delete "$id" || true
           done
+          
+          echo "Waiting 45s for Apple API propagation..."
+          sleep 45
       - name: Create New Certificate
         script: |
+          echo "Verifying clean state..."
+          app-store-connect certificates list --type DISTRIBUTION || true
+          
+          echo "Creating new certificate..."
           app-store-connect fetch-signing-files "com.x5.myapp" --type IOS_APP_STORE --create
       - name: Add certificates to keychain
         script: |
