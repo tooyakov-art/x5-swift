@@ -77,26 +77,31 @@ workflows:
           echo "Found Profile UUID: $PROFILE_UUID"
           
           if [ ! -z "$PROFILE_UUID" ]; then
-              echo "Forcing PROVISIONING_PROFILE = $PROFILE_UUID in project.pbxproj"
-              # Use sed to inject the build setting directly into the project file
-              # This is a brute-force method but necessary if XcodeGen/xcode-project are not cooperating
-              sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = com.x5.myapp;/PRODUCT_BUNDLE_IDENTIFIER = com.x5.myapp; PROVISIONING_PROFILE = \"$PROFILE_UUID\"; PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_UUID\";/g" "$XCODE_PROJECT/project.pbxproj"
+              # Export to CM_ENV so it's available in the next step
+              echo "PROFILE_UUID=$PROFILE_UUID" >> $CM_ENV
+              echo "Exported PROFILE_UUID to environment."
           else
-              echo "ERROR: Could not find any mobileprovision UUID to inject."
+              echo "ERROR: Could not find any mobileprovision UUID."
+              exit 1
           fi
           
-          # Verify project file changes
+          # Verify project file changes (just in case sed worked partially, but we will rely on build args now)
           echo "Verifying project file changes..."
-          grep -r "PROVISIONING_PROFILE" "$XCODE_PROJECT/project.pbxproj" || echo "WARNING: No PROVISIONING_PROFILE found in project file"
+          grep -r "PROVISIONING_PROFILE" "$XCODE_PROJECT/project.pbxproj" || echo "WARNING: No PROVISIONING_PROFILE in project file, relying on build args"
       
       - name: Debug Project
         script: |
           xcodebuild -list -project "$XCODE_PROJECT"
       - name: Build IPA
         script: |
+          echo "Building with Profile: $PROFILE_UUID"
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            --build-arg "PROVISIONING_PROFILE=$PROFILE_UUID" \
+            --build-arg "PROVISIONING_PROFILE_SPECIFIER=$PROFILE_UUID" \
+            --build-arg "CODE_SIGN_STYLE=Manual" \
+            --build-arg "CODE_SIGN_IDENTITY=iPhone Distribution"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
