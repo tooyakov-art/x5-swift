@@ -34,14 +34,13 @@ workflows:
           app-store-connect certificates list --type DISTRIBUTION > certs.txt
           cat certs.txt
           
-          # Simple parsing assuming the ID is the first "word" in lines that look like IDs (10 chars alphanumeric)
-          # Or better, just try to revoke anything that looks like an ID from the output
-          IDS=$(grep -oE '\b[A-Z0-9]{10}\b' certs.txt | sort | uniq)
+          # Parse specifically the line starting with "Id: " to avoid capturing Team IDs
+          IDS=$(grep "^Id: " certs.txt | awk '{print $2}' | sort | uniq)
           
           for id in $IDS; do
-             # Ignore the header or unrelated IDs if any, revoke command will just fail harmlessly
              echo "Attempting to delete: $id"
-             app-store-connect certificates delete --id "$id" || true
+             # Try positional argument since --id was unrecognized
+             app-store-connect certificates delete "$id" || true
           done
       - name: Create New Certificate
         script: |
