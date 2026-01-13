@@ -3,6 +3,9 @@ workflows:
     name: iOS Build & Publish
     integrations:
       app_store_connect: "CodemagicKey2"
+    signing:
+      distribution_type: app_store
+      bundle_identifier: com.x5.myapp
     environment:
       vars:
         XCODE_PROJECT: "X5App.xcodeproj"
@@ -21,25 +24,6 @@ workflows:
         script: |
           # pod install
           echo "No pods to install yet"
-      - name: Revoke Ghost Certificates
-        script: |
-          # Clean up any existing certificates that might be missing keys locally
-          # We search for IOS_DISTRIBUTION certs and revoke them to start fresh
-          echo "Checking for ghost certificates..."
-          IDS=$(app-store-connect certificates list --type IOS_DISTRIBUTION | grep -E '^[|] [A-Z0-9]{10} ' | awk '{print $2}')
-          for id in $IDS; do
-            echo "Revoking ghost certificate: $id"
-            app-store-connect certificates revoke --id "$id" || true
-          done
-      - name: Create New Certificate
-        script: |
-          app-store-connect fetch-signing-files "com.x5.myapp" --type IOS_APP_STORE --create
-      - name: Add certificates to keychain
-        script: |
-          keychain add-certificates
-      - name: Set up signing in Xcode project
-        script: |
-          xcode-project use-profiles
       - name: Build IPA
         script: |
           xcode-project build-ipa \
