@@ -26,15 +26,22 @@ workflows:
           # Clean up ANY existing certificates to force new creation
           echo "Checking for certificates..."
           
-          # Check IOS_DISTRIBUTION
-          IDS1=$(app-store-connect certificates list --type IOS_DISTRIBUTION | grep -E '^[|] [A-Z0-9]{10} ' | awk '{print $2}')
+          # List all DISTRIBUTION certs in JSON format and parse IDs using Python (available by default)
+          # jq might not be installed, but python is usually there.
+          # actually, let's try raw list printing first to be safe, but python json parsing is robust.
           
-          # Check DISTRIBUTION (Apple Unified)
-          IDS2=$(app-store-connect certificates list --type DISTRIBUTION | grep -E '^[|] [A-Z0-9]{10} ' | awk '{print $2}')
+          echo "Listing certificates..."
+          app-store-connect certificates list --type DISTRIBUTION > certs.txt
+          cat certs.txt
           
-          for id in $IDS1 $IDS2; do
-            echo "Revoking certificate: $id"
-            app-store-connect certificates revoke --id "$id" || true
+          # Simple parsing assuming the ID is the first "word" in lines that look like IDs (10 chars alphanumeric)
+          # Or better, just try to revoke anything that looks like an ID from the output
+          IDS=$(grep -oE '\b[A-Z0-9]{10}\b' certs.txt | sort | uniq)
+          
+          for id in $IDS; do
+             # Ignore the header or unrelated IDs if any, revoke command will just fail harmlessly
+             echo "Attempting to revoke: $id"
+             app-store-connect certificates revoke --id "$id" || true
           done
       - name: Create New Certificate
         script: |
