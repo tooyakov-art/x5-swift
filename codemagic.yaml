@@ -13,6 +13,53 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
+      - name: Create App Icon Assets (Placeholder)
+        script: |
+          ASSETS_DIR="Sources/Assets.xcassets"
+          ICON_SET_DIR="$ASSETS_DIR/AppIcon.appiconset"
+          
+          mkdir -p "$ICON_SET_DIR"
+          
+          # Create Contents.json
+          cat <<EOF > "$ICON_SET_DIR/Contents.json"
+          {
+            "images" : [
+              { "size" : "1024x1024", "idiom" : "ios-marketing", "filename" : "icon_1024.png", "scale" : "1x" },
+              { "size" : "20x20", "idiom" : "iphone", "filename" : "icon_20@2x.png", "scale" : "2x" },
+              { "size" : "20x20", "idiom" : "iphone", "filename" : "icon_20@3x.png", "scale" : "3x" },
+              { "size" : "29x29", "idiom" : "iphone", "filename" : "icon_29@2x.png", "scale" : "2x" },
+              { "size" : "29x29", "idiom" : "iphone", "filename" : "icon_29@3x.png", "scale" : "3x" },
+              { "size" : "40x40", "idiom" : "iphone", "filename" : "icon_40@2x.png", "scale" : "2x" },
+              { "size" : "40x40", "idiom" : "iphone", "filename" : "icon_40@3x.png", "scale" : "3x" },
+              { "size" : "60x60", "idiom" : "iphone", "filename" : "icon_60@2x.png", "scale" : "2x" },
+              { "size" : "60x60", "idiom" : "iphone", "filename" : "icon_60@3x.png", "scale" : "3x" }
+            ],
+            "info" : { "version" : 1, "author" : "xcode" }
+          }
+          EOF
+          
+          # Generate base 1024x1024 icon explicitly using Python
+          python3 -c "from PIL import Image, ImageDraw; img = Image.new('RGB', (1024, 1024), color = (73, 109, 237)); d = ImageDraw.Draw(img); d.text((250,400), 'X5', fill=(255,255,255)); img.save('$ICON_SET_DIR/icon_1024.png')" || \
+          (echo "Python failed, trying sips with dummy creation..." && sips -s format png -z 1024 1024 --setProperty primaryColor "0 0 255" out.png --out "$ICON_SET_DIR/icon_1024.png")
+          
+          # Use sips to resize
+          BASE_ICON="$ICON_SET_DIR/icon_1024.png"
+          
+          if [ -f "$BASE_ICON" ]; then
+              sips -z 40 40 "$BASE_ICON" --out "$ICON_SET_DIR/icon_20@2x.png"
+              sips -z 60 60 "$BASE_ICON" --out "$ICON_SET_DIR/icon_20@3x.png"
+              sips -z 58 58 "$BASE_ICON" --out "$ICON_SET_DIR/icon_29@2x.png"
+              sips -z 87 87 "$BASE_ICON" --out "$ICON_SET_DIR/icon_29@3x.png"
+              sips -z 80 80 "$BASE_ICON" --out "$ICON_SET_DIR/icon_40@2x.png"
+              sips -z 120 120 "$BASE_ICON" --out "$ICON_SET_DIR/icon_40@3x.png"
+              sips -z 120 120 "$BASE_ICON" --out "$ICON_SET_DIR/icon_60@2x.png"
+              sips -z 180 180 "$BASE_ICON" --out "$ICON_SET_DIR/icon_60@3x.png"
+              echo "App Icons generated successfully"
+          else
+             echo "Failed to generate base icon"
+             exit 1
+          fi
+
       - name: Install XcodeGen
         script: |
           brew install xcodegen
