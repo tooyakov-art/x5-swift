@@ -3,8 +3,6 @@ options:
   bundleIdPrefix: com.x5
   deploymentTarget:
     iOS: 15.0
-  deploymentTarget:
-    iOS: 15.0
 targets:
   X5App:
     type: application

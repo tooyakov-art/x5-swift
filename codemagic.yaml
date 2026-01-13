@@ -65,7 +65,12 @@ workflows:
           
       - name: Set up signing in Xcode project
         script: |
-          xcode-project use-profiles --warn-only
+          # Ensure xcode-project sees the profiles
+          xcode-project use-profiles --project "$XCODE_PROJECT"
+          
+          # Verify profiles were assigned (grep project file)
+          echo "Verifying project file changes..."
+          grep -r "PROVISIONING_PROFILE" "$XCODE_PROJECT/project.pbxproj" || echo "WARNING: No PROVISIONING_PROFILE found in project file"
       
       - name: Debug Project
         script: |
