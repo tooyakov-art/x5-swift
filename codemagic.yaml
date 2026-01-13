@@ -26,8 +26,9 @@ workflows:
           # Initialize keychain
           keychain initialize
           
-          # Decode P12 from Environment Variable
-          echo $CM_CERTIFICATE | base64 --decode > /tmp/certificate.p12
+          # Decode P12 from Environment Variable using OpenSSL for reliability
+          # -d: decode, -A: ignore line breaks (crucial for long strings)
+          echo "$CM_CERTIFICATE" | openssl base64 -d -A -out /tmp/certificate.p12
           
           # Add to Keychain
           keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
