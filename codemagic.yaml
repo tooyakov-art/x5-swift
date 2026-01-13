@@ -68,7 +68,21 @@ workflows:
           # Ensure xcode-project sees the profiles
           xcode-project use-profiles --project "$XCODE_PROJECT"
           
-          # Verify profiles were assigned (grep project file)
+          # MANUALLY FORCING PROFILE IF xcode-project FAILED to write it
+          # Find the profile UUID
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision | head -n 1)
+          echo "Found Profile UUID: $PROFILE_UUID"
+          
+          if [ ! -z "$PROFILE_UUID" ]; then
+              echo "Forcing PROVISIONING_PROFILE = $PROFILE_UUID in project.pbxproj"
+              # Use sed to inject the build setting directly into the project file
+              # This is a brute-force method but necessary if XcodeGen/xcode-project are not cooperating
+              sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = com.x5.myapp;/PRODUCT_BUNDLE_IDENTIFIER = com.x5.myapp; PROVISIONING_PROFILE = \"$PROFILE_UUID\"; PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_UUID\";/g" "$XCODE_PROJECT/project.pbxproj"
+          else
+              echo "ERROR: Could not find any mobileprovision UUID to inject."
+          fi
+          
+          # Verify project file changes
           echo "Verifying project file changes..."
           grep -r "PROVISIONING_PROFILE" "$XCODE_PROJECT/project.pbxproj" || echo "WARNING: No PROVISIONING_PROFILE found in project file"
       
