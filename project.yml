@@ -23,5 +23,7 @@ targets:
     info:
       path: Sources/Info.plist
       properties:
+        UILaunchScreen:
+          UIColorName: "LaunchBackgroundColor"
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
