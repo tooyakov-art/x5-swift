@@ -41,16 +41,19 @@ workflows:
           # Generate base icon using Base64 (1x1 Opaque White Pixel)
           echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==" | base64 --decode > "$ICON_SET_DIR/base_1x1.png"
           
-          # STRICT ALPHA REMOVAL
+          # STRICT ALPHA REMOVAL using BMP (BMP has no transparency)
           # 1. Resize to 1024x1024
-          sips -z 1024 1024 "$ICON_SET_DIR/base_1x1.png" --out "$ICON_SET_DIR/icon_1024_temp.png"
+          sips -z 1024 1024 "$ICON_SET_DIR/base_1x1.png" --out "$ICON_SET_DIR/icon_temp.png"
           
-          # 2. Force remove alpha channel
-          sips -s format png -s hasAlpha false "$ICON_SET_DIR/icon_1024_temp.png" --out "$ICON_SET_DIR/icon_1024.png"
+          # 2. Convert to BMP (Strips Alpha)
+          sips -s format bmp "$ICON_SET_DIR/icon_temp.png" --out "$ICON_SET_DIR/icon_temp.bmp"
           
-          rm "$ICON_SET_DIR/icon_1024_temp.png"
+          # 3. Convert back to PNG
+          sips -s format png "$ICON_SET_DIR/icon_temp.bmp" --out "$ICON_SET_DIR/icon_1024.png"
           
-          # Use sips to resize for other icons (derived from the opaque 1024 master)
+          rm "$ICON_SET_DIR/base_1x1.png" "$ICON_SET_DIR/icon_temp.png" "$ICON_SET_DIR/icon_temp.bmp"
+          
+          # Use sips to resize for other icons
           BASE_ICON="$ICON_SET_DIR/icon_1024.png"
           
           if [ -f "$BASE_ICON" ]; then
