@@ -46,18 +46,20 @@ workflows:
           
           echo "Fetching profiles..."
           echo "Fetching profiles..."
-          # Fetch profiles fallback
+          # Attempt fetch but don't fail if it doesn't work (we rely on manual injection)
           app-store-connect fetch-signing-files "com.x5.myapp" --type IOS_APP_STORE --ignore-existing-certificates || true
           
           # MANUAL PROFILE INJECTION
+          target_dir="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$target_dir"
+          
           if [ ! -z "$CM_PROVISIONING_PROFILE" ]; then
               echo "Found CM_PROVISIONING_PROFILE. Decoding..."
-              PROFILE_PATH="$HOME/Library/MobileDevice/Provisioning Profiles/manual.mobileprovision"
-              mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+              PROFILE_PATH="$target_dir/manual.mobileprovision"
               echo "$CM_PROVISIONING_PROFILE" | openssl base64 -d -A -out "$PROFILE_PATH"
               echo "Manual profile installed at $PROFILE_PATH"
           else
-              echo "No CM_PROVISIONING_PROFILE variable found."
+              echo "WARNING: No CM_PROVISIONING_PROFILE variable found. If fetch failed, build will fail."
           fi
           
           
