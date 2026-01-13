@@ -16,7 +16,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: "com.x5.myapp"
         CURRENT_PROJECT_VERSION: 1
         MARKETING_VERSION: 1.0.0
-        DEVELOPMENT_TEAM: "" # LEAVE EMPTY usually for manual signing or Codemagic handles it
+        DEVELOPMENT_TEAM: "F8LA8PC4U6"
         INFOPLIST_KEY_UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         INFOPLIST_KEY_UILaunchScreen: {}
         GENERATE_INFOPLIST_FILE: YES
