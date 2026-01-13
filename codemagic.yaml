@@ -40,8 +40,8 @@ workflows:
           
           for id in $IDS; do
              # Ignore the header or unrelated IDs if any, revoke command will just fail harmlessly
-             echo "Attempting to revoke: $id"
-             app-store-connect certificates revoke --id "$id" || true
+             echo "Attempting to delete: $id"
+             app-store-connect certificates delete --id "$id" || true
           done
       - name: Create New Certificate
         script: |
