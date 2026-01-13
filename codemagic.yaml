@@ -39,9 +39,12 @@ workflows:
           EOF
           
           
-          # Generate base icon using Base64 (1x1 Blue Pixel) to avoid dependencies
-          # 1x1 Blue PNG
+          # Generate base icon using Base64 (1x1 Blue Pixel)
           echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPj/HwADBwL5r4r/1AAAAABJRU5ErkJggg==" | base64 --decode > "$ICON_SET_DIR/base_1x1.png"
+          
+          # STRIP ALPHA CHANNEL: Convert to JPG and back to PNG
+          sips -s format jpeg "$ICON_SET_DIR/base_1x1.png" --out "$ICON_SET_DIR/base_1x1.jpg"
+          sips -s format png "$ICON_SET_DIR/base_1x1.jpg" --out "$ICON_SET_DIR/base_1x1.png"
           
           # Scale up to 1024x1024 to serve as master
           sips -z 1024 1024 "$ICON_SET_DIR/base_1x1.png" --out "$ICON_SET_DIR/icon_1024.png"
