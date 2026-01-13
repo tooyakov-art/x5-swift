@@ -38,10 +38,10 @@ workflows:
           }
           EOF
           
-          # Generate base icon using Base64 (1x1 Opaque White Pixel)
-          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==" | base64 --decode > "$ICON_SET_DIR/base_1x1.png"
+          # Generate base icon using Base64 (1x1 Opaque RED Pixel, 24-bit RGB, No Alpha)
+          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4z8AAAAMBAQAY3Y2AAAAAAElFTkSuQmCC" | base64 --decode > "$ICON_SET_DIR/base_1x1.png"
           
-          # STRICT ALPHA REMOVAL using BMP (BMP has no transparency)
+          # SAFETY: Convert to BMP and back to PNG to guarantee NO ALPHA channel implies
           # 1. Resize to 1024x1024
           sips -z 1024 1024 "$ICON_SET_DIR/base_1x1.png" --out "$ICON_SET_DIR/icon_temp.png"
           
