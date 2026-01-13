@@ -19,7 +19,7 @@ targets:
         MARKETING_VERSION: 1.0.0
         DEVELOPMENT_TEAM: "F8LA8PC4U6"
         CODE_SIGN_STYLE: "Manual"
-        PROVISIONING_PROFILE_SPECIFIER: "match AppStore com.x5.myapp"
+        CODE_SIGN_IDENTITY: "iPhone Distribution"
     info:
       path: Sources/Info.plist
       properties:
