@@ -21,27 +21,17 @@ workflows:
         script: |
           # pod install
           echo "No pods to install yet"
+      - name: Set up keychain
+        script: |
+          keychain initialize
       - name: Revoke Ghost Certificates
         script: |
           # Clean up ANY existing certificates to force new creation
           echo "Checking for certificates..."
           
-          # List all DISTRIBUTION certs in JSON format and parse IDs using Python (available by default)
-          # jq might not be installed, but python is usually there.
-          # actually, let's try raw list printing first to be safe, but python json parsing is robust.
-          
           echo "Listing certificates..."
           app-store-connect certificates list --type DISTRIBUTION > certs.txt
           cat certs.txt
-          
-          # Parse specifically the line starting with "Id: " to avoid capturing Team IDs
-          IDS=$(grep "^Id: " certs.txt | awk '{print $2}' | sort | uniq)
-          
-          for id in $IDS; do
-             echo "Attempting to delete: $id"
-             # Try positional argument since --id was unrecognized
-             app-store-connect certificates delete "$id" || true
-          done
           
           echo "Waiting 45s for Apple API propagation..."
           sleep 45
@@ -50,16 +40,11 @@ workflows:
           echo "Verifying clean state..."
           app-store-connect certificates list --type DISTRIBUTION || true
           
-          echo "Creating new certificate and saving key locally..."
-          # Save private key explicitly to avoid system keychain issues
-          app-store-connect fetch-signing-files "com.x5.myapp" --type IOS_APP_STORE --create --save-key private_key.p12
-          
-          echo "Certificate created."
-          ls -la private_key.p12
+          echo "Creating new certificate..."
+          app-store-connect fetch-signing-files "com.x5.myapp" --type IOS_APP_STORE --create
       - name: Add certificates to keychain
         script: |
-          # Add the explicitly saved key
-          keychain add-certificates --certificate private_key.p12
+          keychain add-certificates
       - name: Set up signing in Xcode project
         script: |
           xcode-project use-profiles
