@@ -1,0 +1,25 @@
+workflows:
+  ios-workflow:
+    name: iOS Build & Publish
+    environment:
+      vars:
+        XCODE_WORKSPACE: "X5App.xcworkspace"
+        XCODE_SCHEME: "X5App"
+      node: latest
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install XcodeGen
+        script: |
+          brew install xcodegen
+      - name: Generate Project
+        script: |
+          xcodegen make
+      - name: Initialize Pods (if needed)
+        script: |
+          # pod install
+          echo "No pods to install yet"
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
