@@ -3,8 +3,6 @@ workflows:
     name: iOS Build & Publish
     integrations:
       app_store_connect: "CodemagicKey2"
-    signing:
-      distribution_type: app_store
     environment:
       vars:
         XCODE_PROJECT: "X5App.xcodeproj"
@@ -23,6 +21,21 @@ workflows:
         script: |
           # pod install
           echo "No pods to install yet"
+      - name: Configure Signing (Keychain + Certs)
+        script: |
+          # Initialize keychain in the SAME step to ensure context is preserved
+          keychain initialize
+          
+          echo "Fetching signing files..."
+          # Fetch (and create if needed) certificates and profiles
+          # This should now work because the keychain is active in this session
+          app-store-connect fetch-signing-files "com.x5.myapp" --type IOS_APP_STORE --create
+          
+          # Add them to the keychain explicitly (redundancy)
+          keychain add-certificates
+      - name: Set up signing in Xcode project
+        script: |
+          xcode-project use-profiles
       - name: Build IPA
         script: |
           xcode-project build-ipa \
