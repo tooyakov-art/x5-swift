@@ -21,14 +21,17 @@ workflows:
         script: |
           # pod install
           echo "No pods to install yet"
-      - name: Configure Signing (Env Vars)
+      - name: Configure Signing (Env Vars - Python Decode)
         script: |
           # Initialize keychain
           keychain initialize
           
-          # Decode P12 from Environment Variable using OpenSSL for reliability
-          # -d: decode, -A: ignore line breaks (crucial for long strings)
-          echo "$CM_CERTIFICATE" | openssl base64 -d -A -out /tmp/certificate.p12
+          # Decode P12 from Environment Variable using Python (Most Robust)
+          echo "Decoding certificate using Python..."
+          python3 -c "import base64, os, sys; open('/tmp/certificate.p12', 'wb').write(base64.b64decode(os.environ['CM_CERTIFICATE']))"
+          
+          echo "Certificate size:"
+          ls -l /tmp/certificate.p12
           
           # Add to Keychain
           keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
