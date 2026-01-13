@@ -60,8 +60,11 @@ workflows:
               echo "No CM_PROVISIONING_PROFILE variable found."
           fi
           
+          
           echo "Verifying profiles..."
           ls -R ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles found"
+          
+          # Force Git Update
           
       - name: Set up signing in Xcode project
         script: |
