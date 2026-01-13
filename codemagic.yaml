@@ -16,7 +16,7 @@ workflows:
           brew install xcodegen
       - name: Generate Project
         script: |
-          xcodegen make
+          xcodegen
       - name: Initialize Pods (if needed)
         script: |
           # pod install
