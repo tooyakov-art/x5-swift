@@ -3,6 +3,9 @@ workflows:
     name: iOS Build & Publish
     integrations:
       app_store_connect: "CodemagicKey2"
+    signing:
+      distribution_type: app_store
+      bundle_identifier: com.x5.myapp
     environment:
       vars:
         XCODE_PROJECT: "X5App.xcodeproj"
@@ -21,33 +24,6 @@ workflows:
         script: |
           # pod install
           echo "No pods to install yet"
-      - name: Set up keychain
-        script: |
-          keychain initialize
-      - name: Revoke Ghost Certificates
-        script: |
-          # Clean up ANY existing certificates to force new creation
-          echo "Checking for certificates..."
-          
-          echo "Listing certificates..."
-          app-store-connect certificates list --type DISTRIBUTION > certs.txt
-          cat certs.txt
-          
-          echo "Waiting 45s for Apple API propagation..."
-          sleep 45
-      - name: Create New Certificate
-        script: |
-          echo "Verifying clean state..."
-          app-store-connect certificates list --type DISTRIBUTION || true
-          
-          echo "Creating new certificate..."
-          app-store-connect fetch-signing-files "com.x5.myapp" --type IOS_APP_STORE --create
-      - name: Add certificates to keychain
-        script: |
-          keychain add-certificates
-      - name: Set up signing in Xcode project
-        script: |
-          xcode-project use-profiles
       - name: Build IPA
         script: |
           xcode-project build-ipa \
