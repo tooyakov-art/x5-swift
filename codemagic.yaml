@@ -38,11 +38,15 @@ workflows:
           }
           EOF
           
-          # Generate base 1024x1024 icon explicitly using Python
-          python3 -c "from PIL import Image, ImageDraw; img = Image.new('RGB', (1024, 1024), color = (73, 109, 237)); d = ImageDraw.Draw(img); d.text((250,400), 'X5', fill=(255,255,255)); img.save('$ICON_SET_DIR/icon_1024.png')" || \
-          (echo "Python failed, trying sips with dummy creation..." && sips -s format png -z 1024 1024 --setProperty primaryColor "0 0 255" out.png --out "$ICON_SET_DIR/icon_1024.png")
           
-          # Use sips to resize
+          # Generate base icon using Base64 (1x1 Blue Pixel) to avoid dependencies
+          # 1x1 Blue PNG
+          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPj/HwADBwL5r4r/1AAAAABJRU5ErkJggg==" | base64 --decode > "$ICON_SET_DIR/base_1x1.png"
+          
+          # Scale up to 1024x1024 to serve as master
+          sips -z 1024 1024 "$ICON_SET_DIR/base_1x1.png" --out "$ICON_SET_DIR/icon_1024.png"
+          
+          # Use sips to resize for other icons
           BASE_ICON="$ICON_SET_DIR/icon_1024.png"
           
           if [ -f "$BASE_ICON" ]; then
