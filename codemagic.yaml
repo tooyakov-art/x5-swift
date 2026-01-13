@@ -71,37 +71,44 @@ workflows:
           # Ensure xcode-project sees the profiles
           xcode-project use-profiles --project "$XCODE_PROJECT"
           
-          # MANUALLY FORCING PROFILE IF xcode-project FAILED to write it
-          # Find the profile UUID
-          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision | head -n 1)
-          echo "Found Profile UUID: $PROFILE_UUID"
+          # MANUALLY FORCING PROFILE
+          echo "Looking for profiles in $HOME/Library/MobileDevice/Provisioning Profiles/"
+          PROFILE_PATH=$(find "$HOME/Library/MobileDevice/Provisioning Profiles" -name "*.mobileprovision" | head -n 1)
+          
+          if [ -z "$PROFILE_PATH" ]; then
+            echo "ERROR: No .mobileprovision file found!"
+            exit 1
+          fi
+          
+          echo "Found Profile: $PROFILE_PATH"
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" "$PROFILE_PATH")
+          echo "Extracted UUID: $PROFILE_UUID"
           
           if [ ! -z "$PROFILE_UUID" ]; then
-              # Export to CM_ENV so it's available in the next step
+              echo "Forcing PROVISIONING_PROFILE = $PROFILE_UUID in project.pbxproj"
+              
+              # Inject UUID into project file (Brute Force)
+              sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = com.x5.myapp;/PRODUCT_BUNDLE_IDENTIFIER = com.x5.myapp; PROVISIONING_PROFILE = \"$PROFILE_UUID\"; PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_UUID\";/g" "$XCODE_PROJECT/project.pbxproj"
+              
+              # Export to env just in case
               echo "PROFILE_UUID=$PROFILE_UUID" >> $CM_ENV
-              echo "Exported PROFILE_UUID to environment."
           else
-              echo "ERROR: Could not find any mobileprovision UUID."
+              echo "ERROR: Failed to extract UUID from profile."
               exit 1
           fi
           
-          # Verify project file changes (just in case sed worked partially, but we will rely on build args now)
           echo "Verifying project file changes..."
-          grep -r "PROVISIONING_PROFILE" "$XCODE_PROJECT/project.pbxproj" || echo "WARNING: No PROVISIONING_PROFILE in project file, relying on build args"
+          grep -r "PROVISIONING_PROFILE" "$XCODE_PROJECT/project.pbxproj" || echo "WARNING: Injection failed?"
       
       - name: Debug Project
         script: |
           xcodebuild -list -project "$XCODE_PROJECT"
       - name: Build IPA
         script: |
-          echo "Building with Profile: $PROFILE_UUID"
+          # Verify we have a profile argument or rely on project settings
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME" \
-            --build-arg "PROVISIONING_PROFILE=$PROFILE_UUID" \
-            --build-arg "PROVISIONING_PROFILE_SPECIFIER=$PROFILE_UUID" \
-            --build-arg "CODE_SIGN_STYLE=Manual" \
-            --build-arg "CODE_SIGN_IDENTITY=iPhone Distribution"
+            --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
