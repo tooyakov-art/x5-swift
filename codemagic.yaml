@@ -35,10 +35,21 @@ workflows:
           echo "Certificate size:"
           ls -l /tmp/certificate.p12
           
-          # Add to Keychain
-          keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
+          # Add to Keychain with fallback check
+          echo "Attempting import with provided password..."
+          if keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"; then
+              echo "Certificate imported successfully."
+          else
+              echo "Import failed. Trying with EMPTY password..."
+              if keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password ""; then
+                  echo "Certificate imported with empty password."
+              else
+                  echo "Failed to import certificate. Please check CM_CERTIFICATE_PASSWORD."
+                  exit 1
+              fi
+          fi
           
-          echo "Certificate imported. Fetching profiles..."
+          echo "Fetching profiles..."
           # Fetch profiles only (using the cert we just imported)
           app-store-connect fetch-signing-files "com.x5.myapp" --type IOS_APP_STORE
           
