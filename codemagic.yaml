@@ -38,18 +38,19 @@ workflows:
           }
           EOF
           
+          # Generate base icon using Base64 (1x1 Opaque White Pixel)
+          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==" | base64 --decode > "$ICON_SET_DIR/base_1x1.png"
           
-          # Generate base icon using Base64 (1x1 Blue Pixel)
-          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPj/HwADBwL5r4r/1AAAAABJRU5ErkJggg==" | base64 --decode > "$ICON_SET_DIR/base_1x1.png"
+          # STRICT ALPHA REMOVAL
+          # 1. Resize to 1024x1024
+          sips -z 1024 1024 "$ICON_SET_DIR/base_1x1.png" --out "$ICON_SET_DIR/icon_1024_temp.png"
           
-          # STRIP ALPHA CHANNEL: Convert to JPG and back to PNG
-          sips -s format jpeg "$ICON_SET_DIR/base_1x1.png" --out "$ICON_SET_DIR/base_1x1.jpg"
-          sips -s format png "$ICON_SET_DIR/base_1x1.jpg" --out "$ICON_SET_DIR/base_1x1.png"
+          # 2. Force remove alpha channel
+          sips -s format png -s hasAlpha false "$ICON_SET_DIR/icon_1024_temp.png" --out "$ICON_SET_DIR/icon_1024.png"
           
-          # Scale up to 1024x1024 to serve as master
-          sips -z 1024 1024 "$ICON_SET_DIR/base_1x1.png" --out "$ICON_SET_DIR/icon_1024.png"
+          rm "$ICON_SET_DIR/icon_1024_temp.png"
           
-          # Use sips to resize for other icons
+          # Use sips to resize for other icons (derived from the opaque 1024 master)
           BASE_ICON="$ICON_SET_DIR/icon_1024.png"
           
           if [ -f "$BASE_ICON" ]; then
