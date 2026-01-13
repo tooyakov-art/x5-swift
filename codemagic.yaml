@@ -5,7 +5,6 @@ workflows:
       app_store_connect: "CodemagicKey2"
     signing:
       distribution_type: app_store
-      bundle_identifier: com.x5.myapp
     environment:
       vars:
         XCODE_PROJECT: "X5App.xcodeproj"
