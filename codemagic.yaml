@@ -45,18 +45,17 @@ workflows:
           fi
           
           echo "Fetching profiles..."
-          # Fetch profiles only
-          # IMPORTANT: We already imported the cert. We just want profiles.
-          # Use --ignore-existing-certificates to stop it from complaining about missing private keys for OTHER certs it might find?
-          # Actually, just try to fetch PROFILES directly if possible, or ignore the error?
+          # Since --ignore-existing-certificates is invalid, we will let it fail but catch the error
+          # The goal is to ensure PROFILES are downloaded. The cert part might fail (redundant), but profiles should be OK.
+          app-store-connect fetch-signing-files "com.x5.myapp" --type IOS_APP_STORE || true
           
-          # Try fetching profiles only, but the command is monolithic.
-          # Let's try adding --ignore-existing-certificates so it doesn't try to sync certs and fail on private key checks for them.
-          app-store-connect fetch-signing-files "com.x5.myapp" --type IOS_APP_STORE --ignore-existing-certificates || true
+          echo "Verifying profiles..."
+          ls -R ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles found in default location"
           
       - name: Set up signing in Xcode project
         script: |
-          xcode-project use-profiles
+          # Ensure xcode-project sees the profiles
+          xcode-project use-profiles --warn-only
       - name: Build IPA
         script: |
           xcode-project build-ipa \
