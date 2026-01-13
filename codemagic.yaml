@@ -32,7 +32,10 @@ workflows:
               { "size" : "40x40", "idiom" : "iphone", "filename" : "icon_40@2x.png", "scale" : "2x" },
               { "size" : "40x40", "idiom" : "iphone", "filename" : "icon_40@3x.png", "scale" : "3x" },
               { "size" : "60x60", "idiom" : "iphone", "filename" : "icon_60@2x.png", "scale" : "2x" },
-              { "size" : "60x60", "idiom" : "iphone", "filename" : "icon_60@3x.png", "scale" : "3x" }
+              { "size" : "60x60", "idiom" : "iphone", "filename" : "icon_60@3x.png", "scale" : "3x" },
+              { "size" : "76x76", "idiom" : "ipad", "filename" : "icon_76@1x.png", "scale" : "1x" },
+              { "size" : "76x76", "idiom" : "ipad", "filename" : "icon_76@2x.png", "scale" : "2x" },
+              { "size" : "83.5x83.5", "idiom" : "ipad", "filename" : "icon_83.5@2x.png", "scale" : "2x" }
             ],
             "info" : { "version" : 1, "author" : "xcode" }
           }
@@ -65,6 +68,12 @@ workflows:
               sips -z 120 120 "$BASE_ICON" --out "$ICON_SET_DIR/icon_40@3x.png"
               sips -z 120 120 "$BASE_ICON" --out "$ICON_SET_DIR/icon_60@2x.png"
               sips -z 180 180 "$BASE_ICON" --out "$ICON_SET_DIR/icon_60@3x.png"
+              
+              # iPad Icons
+              sips -z 76 76 "$BASE_ICON" --out "$ICON_SET_DIR/icon_76@1x.png"
+              sips -z 152 152 "$BASE_ICON" --out "$ICON_SET_DIR/icon_76@2x.png"
+              sips -z 167 167 "$BASE_ICON" --out "$ICON_SET_DIR/icon_83.5@2x.png"
+              
               echo "App Icons generated successfully"
           else
              echo "Failed to generate base icon"
