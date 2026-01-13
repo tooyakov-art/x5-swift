@@ -15,9 +15,7 @@ workflows:
     scripts:
       - name: Install XcodeGen
         script: |
-          # Force latest stable version
-          brew install xcodegen || brew upgrade xcodegen
-          xcodegen --version
+          brew install xcodegen
       - name: Generate Project
         script: |
           xcodegen

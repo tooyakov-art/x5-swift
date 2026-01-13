@@ -21,7 +21,6 @@ targets:
         INFOPLIST_KEY_UILaunchScreen: {}
         GENERATE_INFOPLIST_FILE: YES
     info:
-      path: Sources/Info.plist
       properties:
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
