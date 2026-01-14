@@ -140,6 +140,16 @@ workflows:
           # Ensure xcode-project sees the profiles
           xcode-project use-profiles --project "$XCODE_PROJECT"
           
+          # DEBUG: Print Info.plist content
+          echo "--- DEBUG: Content of Source Info.plist ---"
+          cat Sources/Info.plist
+          echo "-------------------------------------------"
+          
+          # FORCE VERSIONING using agvtool (The Apple Way)
+          echo "Forcing version bump with agvtool..."
+          agvtool new-version -all 10
+          agvtool new-marketing-version 1.0.2
+          
           # MANUALLY FORCING PROFILE
           echo "Looking for profiles in $HOME/Library/MobileDevice/Provisioning Profiles/"
           PROFILE_PATH=$(find "$HOME/Library/MobileDevice/Provisioning Profiles" -name "*.mobileprovision" | head -n 1)
