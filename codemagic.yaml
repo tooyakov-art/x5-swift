@@ -189,13 +189,23 @@ workflows:
             --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME" \
             --archive-flags "MARKETING_VERSION=1.0.3 CURRENT_PROJECT_VERSION=19"
+      - name: Upload to App Store (No Wait)
+        script: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_IDENTIFIER.p8
+          
+          IPA_PATH=$(find build/ios/ipa -name "*.ipa" | head -n 1)
+          echo "Found IPA: $IPA_PATH"
+          
+          echo "Uploading to App Store Connect (TestFlight)..."
+          # altool uploads to TestFlight but does NOT wait for processing
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$IPA_PATH" \
+            --apiKey "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+            
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
-    publishing:
-      app_store_connect:
-        api_key: $APP_STORE_CONNECT_PRIVATE_KEY # Encrypted
-        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
-        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        submit_to_testflight: true
