@@ -12,6 +12,7 @@ class NavigationManager: ObservableObject {
 // MARK: - WebView wrapper
 struct WebView: UIViewRepresentable {
     let url: URL
+    @Binding var reloadTrigger: UUID
     @ObservedObject var navigation: NavigationManager
 
     func makeCoordinator() -> Coordinator {
@@ -44,14 +45,17 @@ struct WebView: UIViewRepresentable {
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        if webView.url == nil {
-            let request = URLRequest(url: url)
-            webView.load(request)
+        // Reload if trigger changed
+        if context.coordinator.lastReloadTrigger != reloadTrigger {
+            context.coordinator.lastReloadTrigger = reloadTrigger
+            print("App returned to foreground: Reloading WebView...")
+            webView.reload()
         }
     }
 
     class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         var parent: WebView
+        var lastReloadTrigger: UUID = UUID()
 
         init(_ parent: WebView) {
             self.parent = parent

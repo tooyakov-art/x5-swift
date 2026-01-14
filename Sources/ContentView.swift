@@ -2,6 +2,8 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var navigation = NavigationManager()
+    @Environment(\.scenePhase) var scenePhase
+    @State private var reloadTrigger = UUID()
     
     var body: some View {
         ZStack {
@@ -9,7 +11,7 @@ struct ContentView: View {
             Color.white.edgesIgnoringSafeArea(.all)
 
             // Main WebView
-            WebView(url: Config.targetURL, navigation: navigation)
+            WebView(url: Config.targetURL, reloadTrigger: $reloadTrigger, navigation: navigation)
                 .edgesIgnoringSafeArea(.all)
             
             // Native Overlays
@@ -29,6 +31,12 @@ struct ContentView: View {
         }
         .edgesIgnoringSafeArea(.all)
         .statusBar(hidden: true) // Optional: Hide status bar for cleaner look
+        .onChange(of: scenePhase) { newPhase in
+            if newPhase == .active {
+                print("App is active, triggering reload")
+                reloadTrigger = UUID()
+            }
+        }
     }
 }
 
