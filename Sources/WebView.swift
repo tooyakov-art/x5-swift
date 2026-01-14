@@ -1,3 +1,4 @@
+import UIKit
 import SwiftUI
 import WebKit
 
@@ -20,12 +21,16 @@ struct WebView: UIViewRepresentable {
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         // Add script message handler
-        config.userContentController.add(context.coordinator, name: "appAction")
+        // IMPORTANT: Name must be strictly "x5App" per protocol
+        config.userContentController.add(context.coordinator, name: "x5App")
         
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
         config.preferences.javaScriptEnabled = true
         config.allowsInlineMediaPlayback = true
+        
+        // Inject Platform Info via UserAgent
+        webView.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1 X5IOSClient"
         
         // UI Fixes (White Background, No Black Bars)
         webView.isOpaque = false
@@ -51,22 +56,67 @@ struct WebView: UIViewRepresentable {
         init(_ parent: WebView) {
             self.parent = parent
         }
-
+        
         // Handle JS messages
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-            if let dict = message.body as? [String: Any],
-               let action = dict["action"] as? String {
-                
-                print("Received JS action: \(action)")
-                
-                DispatchQueue.main.async {
-                    if action == "payment" {
-                        self.parent.navigation.showPayment = true
-                    } else if action == "login" {
-                        self.parent.navigation.showLogin = true
+            print("Received message: \(message.name), body: \(message.body)")
+            
+            guard message.name == "x5App" else { return }
+            
+            // 1. Try to parse message body
+            // Protocol says: window.webkit.messageHandlers.x5App.postMessage(JSON_STRING)
+            // So we expect a String. BUT in case they send a Dict, we handle that too.
+            
+            var messageType: String?
+            var payload: [String: Any]?
+            
+            if let jsonString = message.body as? String {
+                if let data = jsonString.data(using: .utf8),
+                   let dict = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                    messageType = dict["type"] as? String
+                    payload = dict["payload"] as? [String: Any]
+                }
+            } else if let dict = message.body as? [String: Any] {
+                 messageType = dict["type"] as? String
+                 payload = dict["payload"] as? [String: Any]
+            }
+            
+            guard let type = messageType else {
+                print("Error: Could not parse message type")
+                return
+            }
+            
+            print("Processing action: \(type)")
+            
+            DispatchQueue.main.async {
+                switch type {
+                case "PAYMENT_REQUEST":
+                     // Trigger Payment Flow
+                     self.parent.navigation.showPayment = true
+                    
+                case "HAPTIC":
+                    // Trigger Haptic Feedback
+                    if let style = payload?["style"] as? String {
+                        self.triggerHaptic(style: style)
                     }
+                    
+                default:
+                    print("Unhandled action type: \(type)")
                 }
             }
+        }
+        
+        func triggerHaptic(style: String) {
+            let feedbackStyle: UIImpactFeedbackGenerator.FeedbackStyle
+            switch style {
+            case "light": feedbackStyle = .light
+            case "medium": feedbackStyle = .medium
+            case "heavy": feedbackStyle = .heavy
+            default: feedbackStyle = .medium
+            }
+            let generator = UIImpactFeedbackGenerator(style: feedbackStyle)
+            generator.prepare()
+            generator.impactOccurred()
         }
         
         // MARK: - WKNavigationDelegate
