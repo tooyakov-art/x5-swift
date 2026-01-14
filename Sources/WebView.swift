@@ -1,13 +1,14 @@
 import UIKit
 import SwiftUI
 import WebKit
+import AuthenticationServices
 
 // MARK: - Navigation Manager
 class NavigationManager: ObservableObject {
     @Published var showPayment: Bool = false
     @Published var showLogin: Bool = false
-    @Published var isLoading: Bool = true // Default to true to show loader initially
-    weak var webView: WKWebView? // Generic reference to call JS
+    @Published var isLoading: Bool = true 
+    weak var webView: WKWebView? 
 }
 
 // MARK: - WebView wrapper
@@ -67,7 +68,7 @@ struct WebView: UIViewRepresentable {
         }
     }
 
-    class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
+    class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
         var parent: WebView
         var lastReloadTrigger: UUID = UUID()
 
@@ -136,8 +137,44 @@ struct WebView: UIViewRepresentable {
             }
         }
         
+        
         func handleAppleLogin() {
-             print("Native Apple Login Requested")
+            print("Native Apple Login Requested")
+            let appleIDProvider = ASAuthorizationAppleIDProvider()
+            let request = appleIDProvider.createRequest()
+            request.requestedScopes = [.fullName, .email]
+            
+            let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+            authorizationController.delegate = self
+            authorizationController.presentationContextProvider = self
+            authorizationController.performRequests()
+        }
+        
+        // MARK: - ASAuthorizationControllerDelegate
+        func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+            if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
+                
+                let userIdentifier = appleIDCredential.user
+                let fullName = appleIDCredential.fullName
+                let email = appleIDCredential.email
+                
+                var nameStr = "Apple User"
+                if let given = fullName?.givenName, let family = fullName?.familyName {
+                    nameStr = "\(given) \(family)"
+                }
+                
+                // Send to Web
+                self.sendAuthSuccess(uid: userIdentifier, email: email ?? "", displayName: nameStr, photoURL: "")
+            }
+        }
+        
+        func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+            print("Apple Auth Failed: \(error.localizedDescription)")
+            // Optionally send error to web?
+        }
+        
+        func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+            return self.parent.navigation.webView?.window ?? ASPresentationAnchor()
         }
         
         func handleGoogleLogin() {

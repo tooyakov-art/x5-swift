@@ -5,38 +5,118 @@ struct ContentView: View {
     @Environment(\.scenePhase) var scenePhase
     @State private var reloadTrigger = UUID()
     
+    // Tab Selection
+    @State private var selectedTab: Int = 0
+    
     var body: some View {
         ZStack {
-            // Force white background to cover any safe area gaps
-            Color.white.edgesIgnoringSafeArea(.all)
-
-            // Main WebView
-            WebView(url: Config.targetURL, reloadTrigger: $reloadTrigger, navigation: navigation)
-                .edgesIgnoringSafeArea(.all)
+            // Background
+            Color.black.edgesIgnoringSafeArea(.all)
             
-            // Native Overlays
-            if navigation.showPayment {
-                PaymentView(navigation: navigation)
+            // CONTENT LAYER
+            Group {
+                switch selectedTab {
+                case 0:
+                    // HOME: WebView
+                    ZStack {
+                        Color.white.edgesIgnoringSafeArea(.all)
+                        WebView(url: Config.targetURL, reloadTrigger: $reloadTrigger, navigation: navigation)
+                    }
+                    
+                case 1:
+                    // SEARCH / EXPLORE
+                    DummyGlassView(title: "Explore", icon: "magnifyingglass", color: .purple)
+                    
+                case 2:
+                    // NOTIFICATIONS
+                    DummyGlassView(title: "Updates", icon: "bell.fill", color: .blue)
+                    
+                case 3:
+                    // PROFILE
+                    DummyGlassView(title: "Profile", icon: "person.crop.circle", color: .orange)
+                    
+                default:
+                    Text("Error")
+                }
             }
+            .edgesIgnoringSafeArea(.all)
+            .padding(.bottom, 80) // Space for TabBar
             
-            if navigation.showLogin {
-               LoginView(navigation: navigation)
-            }
+            // Native Overlays (kept from before)
+            if navigation.showPayment { PaymentView(navigation: navigation) }
+            if navigation.showLogin { LoginView(navigation: navigation) }
+            if navigation.isLoading { LoadingView().transition(.opacity).zIndex(100) }
             
-            if navigation.isLoading {
-                LoadingView()
-                    .transition(.opacity)
-                    .zIndex(100) // Ensure it's always on top
+            // CUSTOM GLASS TAB BAR
+            VStack {
+                Spacer()
+                HStack(spacing: 0) {
+                    TabButton(icon: "house.fill", isSelected: selectedTab == 0) { selectedTab = 0 }
+                    TabButton(icon: "magnifyingglass", isSelected: selectedTab == 1) { selectedTab = 1 }
+                    TabButton(icon: "bell.fill", isSelected: selectedTab == 2) { selectedTab = 2 }
+                    TabButton(icon: "person.fill", isSelected: selectedTab == 3) { selectedTab = 3 }
+                }
+                .padding(.vertical, 16)
+                .padding(.horizontal, 20)
+                .background(.ultraThinMaterial)
+                .cornerRadius(30)
+                .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 30)
             }
         }
-        .edgesIgnoringSafeArea(.all)
-        .statusBar(hidden: true) // Optional: Hide status bar for cleaner look
-        // .onChange(of: scenePhase) { newPhase in
-        //     if newPhase == .active {
-        //         print("App is active, triggering reload")
-        //         reloadTrigger = UUID()
-        //     }
-        // }
+        .edgesIgnoringSafeArea(.bottom) // Allow TabBar to float
+        .statusBar(hidden: true)
+        // .onChange ... disabled
+    }
+}
+
+// MARK: - Components
+
+struct TabButton: View {
+    let icon: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 24, weight: isSelected ? .bold : .regular))
+                .foregroundColor(isSelected ? .white : .gray.opacity(0.6))
+                .frame(maxWidth: .infinity)
+                .scaleEffect(isSelected ? 1.2 : 1.0)
+                .animation(.spring(), value: isSelected)
+        }
+    }
+}
+
+struct DummyGlassView: View {
+    let title: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        ZStack {
+            // Background Gradient
+            LinearGradient(gradient: Gradient(colors: [color.opacity(0.8), Color.black]), startPoint: .top, endPoint: .bottom)
+                .edgesIgnoringSafeArea(.all)
+            
+            VStack(spacing: 30) {
+                Image(systemName: icon)
+                    .font(.system(size: 80))
+                    .foregroundColor(.white)
+                    .shadow(color: .white.opacity(0.5), radius: 20)
+                
+                Text(title)
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                
+                LiquidGlassButton(title: "Action Button", icon: "sparkles") {
+                    print("Glass Button Tapped")
+                }
+                .padding(.horizontal, 40)
+            }
+        }
     }
 }
 
