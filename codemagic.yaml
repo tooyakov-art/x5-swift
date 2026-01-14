@@ -147,7 +147,7 @@ workflows:
           
           # FORCE VERSIONING using agvtool (The Apple Way)
           echo "Forcing version bump with agvtool..."
-          agvtool new-version -all 15
+          agvtool new-version -all 16
           agvtool new-marketing-version 1.0.3
           
           # MANUALLY FORCING PROFILE
@@ -188,14 +188,15 @@ workflows:
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME" \
-            --archive-flags "MARKETING_VERSION=1.0.3 CURRENT_PROJECT_VERSION=15"
+            --archivePath build/ios/X5_App.xcarchive \
+            --archive-flags "MARKETING_VERSION=1.0.3 CURRENT_PROJECT_VERSION=16 CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=3438A5547U PROVISIONING_PROFILE_SPECIFIER=X5App_Dist"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
-    # publishing:
-    #   app_store_connect:
-    #     api_key: $APP_STORE_CONNECT_PRIVATE_KEY # Encrypted
-    #     key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
-    #     issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-    #     submit_to_testflight: true
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY # Encrypted
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
