@@ -147,7 +147,7 @@ workflows:
           
           # FORCE VERSIONING using agvtool (The Apple Way)
           echo "Forcing version bump with agvtool..."
-          agvtool new-version -all 22
+          agvtool new-version -all 24
           agvtool new-marketing-version 1.0.3
           
           # MANUALLY FORCING PROFILE
@@ -188,7 +188,7 @@ workflows:
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME" \
-            --archive-flags "MARKETING_VERSION=1.0.3 CURRENT_PROJECT_VERSION=22"
+            --archive-flags "MARKETING_VERSION=1.0.3 CURRENT_PROJECT_VERSION=24"
     publishing:
       app_store_connect:
         api_key: $APP_STORE_CONNECT_PRIVATE_KEY # Encrypted
