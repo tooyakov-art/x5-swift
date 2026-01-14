@@ -26,6 +26,11 @@ struct WebView: UIViewRepresentable {
         // IMPORTANT: Name must be strictly "x5App" per protocol
         config.userContentController.add(context.coordinator, name: "x5App")
         
+        // Inject x5Platform = 'ios' at document end
+        let js = "window.x5Platform = 'ios';"
+        let userScript = WKUserScript(source: js, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
+        config.userContentController.addUserScript(userScript)
+        
         let webView = WKWebView(frame: .zero, configuration: config)
         
         // Capture reference for JS evaluation
@@ -114,6 +119,11 @@ struct WebView: UIViewRepresentable {
                      // For now, we just acknowledge or show a placeholder.
                      self.handleGoogleLogin()
 
+                case "LOGIN_APPLE":
+                     print("Triggering Apple Login...")
+                     // TODO: Implement ASAuthorizationAppleIDProvider
+                     self.handleAppleLogin()
+
                 case "HAPTIC":
                     // Trigger Haptic Feedback
                     if let style = payload?["style"] as? String {
@@ -124,6 +134,10 @@ struct WebView: UIViewRepresentable {
                     print("Unhandled action type: \(type)")
                 }
             }
+        }
+        
+        func handleAppleLogin() {
+             print("Native Apple Login Requested")
         }
         
         func handleGoogleLogin() {
@@ -170,9 +184,9 @@ struct WebView: UIViewRepresentable {
         
         // MARK: - WKNavigationDelegate
         func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-            DispatchQueue.main.async {
-                self.parent.navigation.isLoading = true
-            }
+            // DispatchQueue.main.async {
+            //    self.parent.navigation.isLoading = true
+            // }
         }
         
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {

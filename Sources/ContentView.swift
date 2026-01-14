@@ -31,12 +31,12 @@ struct ContentView: View {
         }
         .edgesIgnoringSafeArea(.all)
         .statusBar(hidden: true) // Optional: Hide status bar for cleaner look
-        .onChange(of: scenePhase) { newPhase in
-            if newPhase == .active {
-                print("App is active, triggering reload")
-                reloadTrigger = UUID()
-            }
-        }
+        // .onChange(of: scenePhase) { newPhase in
+        //     if newPhase == .active {
+        //         print("App is active, triggering reload")
+        //         reloadTrigger = UUID()
+        //     }
+        // }
     }
 }
 
