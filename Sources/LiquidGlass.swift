@@ -72,7 +72,7 @@ struct GlassEffectModifier<S: Shape>: ViewModifier {
                         // 3. Specular Highlight / Border & Lensing simulation
                         // We simulate "light bending" with a subtle gradient stroke and inner shadows
                         shape
-                            .strokeBorder(
+                            .stroke(
                                 LinearGradient(
                                     stops: [
                                         .init(color: .white.opacity(0.5), location: 0),
