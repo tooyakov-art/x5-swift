@@ -47,6 +47,9 @@ struct WebView: UIViewRepresentable {
         // CRITICAL: Disable safe area insets so content flows under notch/home bar
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         
+        // LOAD THE URL!
+        webView.load(URLRequest(url: url))
+        
         return webView
     }
 
@@ -174,11 +177,8 @@ struct WebView: UIViewRepresentable {
         
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             DispatchQueue.main.async {
-                // Add a small delay to ensure rendering is ready
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    withAnimation {
-                        self.parent.navigation.isLoading = false
-                    }
+                withAnimation {
+                    self.parent.navigation.isLoading = false
                 }
             }
         }
