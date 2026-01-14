@@ -22,8 +22,26 @@ struct ContentView: View {
             VStack {
                 Spacer()
                 
-                GlassEffectContainer {
-                    HStack(spacing: 0) {
+                ZStack {
+                    // 1. GLOW (СВЕЧЕНИЕ) — Обязательно для стекла!
+                    // Без этого "жидкость" будет выглядеть как грязь
+                    LinearGradient(
+                        colors: [
+                            Color.blue.opacity(0.6),
+                            Color.purple.opacity(0.6),
+                            Color.clear
+                        ],
+                        startPoint: .bottom,
+                        endPoint: .top
+                    )
+                    .frame(height: 150)
+                    .mask(Ellipse().scaleEffect(1.5))
+                    .blur(radius: 60) // Сильное размытие для мягкого света
+                    .offset(y: 40) // Смещаем вниз под кнопки
+                    
+                    // 2. Жидкий контейнер
+                    GlassEffectContainer(spacing: 0) {
+                        // Кнопки
                         TabButton(icon: "house.fill", isSelected: selectedTab == 0) {
                             selectedTab = 0
                             navigation.sendTabEvent(index: 0)
@@ -43,9 +61,8 @@ struct ContentView: View {
                     }
                     .padding(.vertical, 20)
                     .padding(.horizontal, 24)
-                    .glassEffect(.regular.tint(.black.opacity(0.6)), in: Capsule())
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 34) // Adjust for Home Indicator
+                    // Убираем старый .glassEffect, так как теперь он внутри контейнера
+                    .padding(.bottom, 34) 
                 }
             }
             .edgesIgnoringSafeArea(.bottom)

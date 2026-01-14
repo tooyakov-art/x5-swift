@@ -1,68 +1,58 @@
 import SwiftUI
 
-// MARK: - GlassEffectContainer
-
-/// A container that coordinates Liquid Glass effects for its child views.
 public struct GlassEffectContainer<Content: View>: View {
     var spacing: CGFloat?
-    var content: Content
+    @ViewBuilder var content: Content
     
-    public init(spacing: CGFloat? = nil, @ViewBuilder content: () -> Content) {
+    public init(spacing: CGFloat? = 0, @ViewBuilder content: () -> Content) {
         self.spacing = spacing
         self.content = content()
     }
     
     public var body: some View {
-        // In a full implementation, this might use a Canvas with a threshold filter 
-        // to merge "glass" layers (metaballs effect).
-        // For now, we present the content as-is, but the API is ready for that extension.
-        // We ensure a coordinate space for any matching geometry effects.
-        content
-            .environment(\.glassEffectContainerSpacing, spacing)
-    }
-}
-
-// MARK: - Environment Keys
-
-struct GlassEffectContainerSpacingKey: EnvironmentKey {
-    static let defaultValue: CGFloat? = nil
-}
-
-extension EnvironmentValues {
-    var glassEffectContainerSpacing: CGFloat? {
-        get { self[GlassEffectContainerSpacingKey.self] }
-        set { self[GlassEffectContainerSpacingKey.self] = newValue }
-    }
-}
-
-// MARK: - Glass Effect ID (Morphing Support)
-
-public extension View {
-    /// Identifies a view for Liquid Glass morphing transitions within a namespace.
-    func glassEffectID<ID: Hashable>(_ id: ID, in namespace: Namespace.ID) -> some View {
-        self.matchedGeometryEffect(id: id, in: namespace)
-    }
-    
-    /// defines a union of glass effects
-    func glassEffectUnion<ID: Hashable>(id: ID, namespace: Namespace.ID) -> some View {
-         // In a real implementation this would likely tag the view preference 
-         // so the container can draw a unified shape.
-         // Here we just return self as a placeholder for the API.
-         self
-    }
-}
-
-// MARK: - Transition
-
-public enum GlassEffectTransition {
-    case identity
-    case matchedGeometry
-    case materialize
-}
-
-public extension View {
-    func glassEffectTransition(_ transition: GlassEffectTransition, isEnabled: Bool = true) -> some View {
-        // Placeholder for transition logic
-        self
+        ZStack {
+            // СЛОЙ 1: Жидкая подложка (Metaballs)
+            // Рендерим контент как символы, размываем и склеиваем
+            Canvas { context, size in
+                // Достаем контент по тегу
+                if let symbol = context.resolveSymbol(id: 1) {
+                    // 1. Создаем эффект "жижи"
+                    // Размываем элементы друг в друга
+                    context.addFilter(.blur(radius: 12))
+                    
+                    // 2. Отсекаем полутона (Alpha Threshold)
+                    // Это делает края снова четкими, создавая эффект слияния
+                    context.addFilter(.alphaThreshold(min: 0.5, color: .white))
+                    
+                    // Рисуем результат
+                    context.draw(symbol, at: CGPoint(x: size.width / 2, y: size.height / 2))
+                }
+            } symbols: {
+                // Здесь мы передаем только "тела" кнопок для склеивания
+                HStack(spacing: spacing) {
+                    content
+                        // Важно: превращаем кнопки в белые пятна для маски
+                        .foregroundColor(.white)
+                        // Убираем детали, оставляем только форму
+                        .blur(radius: 0) 
+                }
+                .tag(1)
+            }
+            // Накладываем стеклянный материал поверх жидкой формы
+            .opacity(0.4) // Прозрачность самой жидкости
+            .blendMode(.plusLighter) // Режим наложения для свечения
+            
+            // СЛОЙ 2: Реальный контент (Иконки и текст)
+            // Они остаются четкими поверх жидкости
+            HStack(spacing: spacing) {
+                content
+            }
+        }
+        // Добавляем глобальный стеклянный фон контейнеру
+        .background(
+            Capsule()
+                .fill(.ultraThinMaterial)
+                .opacity(0.1) // Легкая подложка
+        )
     }
 }
