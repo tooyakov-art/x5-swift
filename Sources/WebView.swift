@@ -5,6 +5,7 @@ import WebKit
 class NavigationManager: ObservableObject {
     @Published var showPayment: Bool = false
     @Published var showLogin: Bool = false
+    @Published var isLoading: Bool = true // Default to true to show loader initially
 }
 
 // MARK: - WebView wrapper
@@ -23,6 +24,14 @@ struct WebView: UIViewRepresentable {
         
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
+        config.preferences.javaScriptEnabled = true
+        config.allowsInlineMediaPlayback = true
+        
+        // UI Fixes (White Background, No Black Bars)
+        webView.isOpaque = false
+        webView.backgroundColor = .white
+        webView.scrollView.backgroundColor = .white
+        
         return webView
     }
 
@@ -41,7 +50,6 @@ struct WebView: UIViewRepresentable {
         }
 
         // Handle JS messages
-        // Usage on site: window.webkit.messageHandlers.appAction.postMessage({action: 'payment'})
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             if let dict = message.body as? [String: Any],
                let action = dict["action"] as? String {
@@ -56,6 +64,30 @@ struct WebView: UIViewRepresentable {
                     }
                 }
             }
+        }
+        
+        // MARK: - WKNavigationDelegate
+        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+            DispatchQueue.main.async {
+                self.parent.navigation.isLoading = true
+            }
+        }
+        
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            DispatchQueue.main.async {
+                // Add a small delay to ensure rendering is ready
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    withAnimation {
+                        self.parent.navigation.isLoading = false
+                    }
+                }
+            }
+        }
+        
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+             DispatchQueue.main.async {
+                 self.parent.navigation.isLoading = false
+             }
         }
     }
 }

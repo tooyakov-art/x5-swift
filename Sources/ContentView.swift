@@ -5,9 +5,12 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
+            // Force white background to cover any safe area gaps
+            Color.white.edgesIgnoringSafeArea(.all)
+
             // Main WebView
             WebView(url: Config.targetURL, navigation: navigation)
-                .edgesIgnoringSafeArea(.bottom)
+                .edgesIgnoringSafeArea(.all)
             
             // Native Overlays
             if navigation.showPayment {
@@ -16,6 +19,13 @@ struct ContentView: View {
             
             if navigation.showLogin {
                LoginView(navigation: navigation)
+            }
+            
+            // Loading Screen (Last to be on top)
+            if navigation.isLoading {
+                LoadingView()
+                    .transition(.opacity)
+                    .zIndex(100) // Ensure it's always on top
             }
         }
     }
