@@ -52,6 +52,7 @@ public struct GlassButtonStyle: ButtonStyle {
         case .mini: return EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8)
         case .small: return EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
         case .large: return EdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20)
+        case .extraLarge: return EdgeInsets(top: 16, leading: 24, bottom: 16, trailing: 24)
         case .regular: fallthrough
         @unknown default: return EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16)
         }
@@ -61,7 +62,7 @@ public struct GlassButtonStyle: ButtonStyle {
 // Ensure AnyShape wrapper exists or we use specific shapes. 
 // For simplicity in this file, we define a wrapper.
 struct AnyShape: Shape {
-    private let _path: (CGRect) -> Path
+    private let _path: @Sendable (CGRect) -> Path
 
     init<S: Shape>(_ wrapped: S) {
         _path = { rect in

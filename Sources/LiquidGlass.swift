@@ -84,7 +84,7 @@ struct GlassEffectModifier<S: Shape>: ViewModifier {
                                 ),
                                 lineWidth: 1
                             )
-                            .blendMode(.overlay)
+                            .blendMode(BlendMode.overlay)
                     }
                     .shadow(
                         color: Color.black.opacity(glass.variant == .clear ? 0.1 : 0.15),

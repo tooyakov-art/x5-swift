@@ -46,7 +46,11 @@ struct WebView: UIViewRepresentable {
             self.navigation.webView = webView
         }
         webView.navigationDelegate = context.coordinator
-        config.preferences.javaScriptEnabled = true
+        
+        let prefs = WKWebpagePreferences()
+        prefs.allowsContentJavaScript = true
+        config.defaultWebpagePreferences = prefs
+        
         config.allowsInlineMediaPlayback = true
         
         // Inject Platform Info via UserAgent
