@@ -13,8 +13,8 @@ targets:
       base:
         PRODUCT_NAME: "X5 App"
         PRODUCT_BUNDLE_IDENTIFIER: "com.x5.myapp"
-        CURRENT_PROJECT_VERSION: 11
-        MARKETING_VERSION: 1.0.2
+        CURRENT_PROJECT_VERSION: 12
+        MARKETING_VERSION: 1.0.3
         DEVELOPMENT_TEAM: "F8LA8PC4U6"
         CODE_SIGN_STYLE: "Manual"
         CODE_SIGN_IDENTITY: "iPhone Distribution"
