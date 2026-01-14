@@ -27,6 +27,7 @@ targets:
           UIColorName: "LaunchBackgroundColor"
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
+        ITSAppUsesNonExemptEncryption: false
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationPortraitUpsideDown
