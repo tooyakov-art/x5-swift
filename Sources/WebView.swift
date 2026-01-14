@@ -7,6 +7,7 @@ class NavigationManager: ObservableObject {
     @Published var showPayment: Bool = false
     @Published var showLogin: Bool = false
     @Published var isLoading: Bool = true // Default to true to show loader initially
+    weak var webView: WKWebView? // Generic reference to call JS
 }
 
 // MARK: - WebView wrapper
@@ -26,6 +27,11 @@ struct WebView: UIViewRepresentable {
         config.userContentController.add(context.coordinator, name: "x5App")
         
         let webView = WKWebView(frame: .zero, configuration: config)
+        
+        // Capture reference for JS evaluation
+        DispatchQueue.main.async {
+            self.navigation.webView = webView
+        }
         webView.navigationDelegate = context.coordinator
         config.preferences.javaScriptEnabled = true
         config.allowsInlineMediaPlayback = true
@@ -98,6 +104,13 @@ struct WebView: UIViewRepresentable {
                      // Trigger Payment Flow
                      self.parent.navigation.showPayment = true
                     
+                case "LOGIN_GOOGLE":
+                     // Trigger Google Sign-In Flow
+                     print("Triggering Google Login...")
+                     // TODO: Implement ASWebAuthenticationSession or GIDSignIn
+                     // For now, we just acknowledge or show a placeholder.
+                     self.handleGoogleLogin()
+
                 case "HAPTIC":
                     // Trigger Haptic Feedback
                     if let style = payload?["style"] as? String {
@@ -107,6 +120,35 @@ struct WebView: UIViewRepresentable {
                 default:
                     print("Unhandled action type: \(type)")
                 }
+            }
+        }
+        
+        func handleGoogleLogin() {
+            // Placeholder for Native Google Sign In
+            // In a real implementation with GIDSignIn:
+            // GIDSignIn.sharedInstance.signIn(...) { user, error in
+            //     if let user = user {
+            //         self.sendAuthSuccess(user: user)
+            //     }
+            // }
+            print("Native Google Login Requested")
+        }
+
+        func sendAuthSuccess(uid: String, email: String, displayName: String, photoURL: String) {
+            let jsonDict: [String: Any] = [
+                "type": "AUTH_SUCCESS",
+                "payload": [
+                    "uid": uid,
+                    "email": email,
+                    "displayName": displayName,
+                    "photoURL": photoURL
+                ]
+            ]
+            
+            if let data = try? JSONSerialization.data(withJSONObject: jsonDict, options: []),
+               let jsonString = String(data: data, encoding: .utf8) {
+                // Execute JS to send data back to Web
+                self.parent.navigation.webView?.evaluateJavaScript("window.postMessage(\(jsonString), '*')")
             }
         }
         
