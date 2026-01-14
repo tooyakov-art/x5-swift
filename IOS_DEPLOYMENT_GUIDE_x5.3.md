@@ -331,7 +331,7 @@ workflows:
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME" \
-            --archive-flags "MARKETING_VERSION=1.0.2 CURRENT_PROJECT_VERSION=10"
+            --archive-flags "MARKETING_VERSION=1.0.3 CURRENT_PROJECT_VERSION=11"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
