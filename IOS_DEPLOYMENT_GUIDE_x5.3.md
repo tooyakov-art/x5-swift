@@ -1,15 +1,20 @@
 # iOS Deployment Master Guide 📱🚀
 
-**Цель:** Успешная сборка и публикация iOS приложения в TestFlight с первого раза.
-**Проект:** Swift (XcodeGen + Codemagic).
+**Цель:** Успешная сборка и публикация iOS приложения в TestFlight.
+**Статус:** ✅ Успешно (Версия 1.0.2, Build 10).
 
 ---
 
-## 🛑 ЗОЛОТЫЕ ПРАВИЛА (Не нарушать!)
+## 🛑 ЗОЛОТЫЕ ПРАВИЛА (Чтобы не сломалось снова)
 
-1.  **Профиль (Provisioning Profile) только ВРУЧНУЮ.**
+1.  **Версии (Versioning):**
+    *   Если App Store ругается на "Duplicate Version", значит такая версия билда уже была загружена.
+    *   **Решение:** Всегда поднимайте `CURRENT_PROJECT_VERSION` (Build) и `MARKETING_VERSION` (Version) в `project.yml` перед новым билдом.
+    *   Мы также используем `agvtool` в Codemagic, чтобы "насильно" прописывать версию, если забыли в файле.
+
+2.  **Профиль (Provisioning Profile) только ВРУЧНУЮ.**
     *   Никогда не полагайтесь на автоматическое скачивание (`app-store-connect fetch-signing-files`). Оно часто ломается.
-    *   Всегда скачивайте файл `.mobileprovision` с сайта Apple и добавляйте его через переменную `CM_PROVISIONING_PROFILE`.
+    *   Всегда скачивайте файл `.mobileprovision` с сайта Apple и добавляйте его через переменную `CM_PROVISIONING_PROFILE` в Base64.
 
 2.  **Никакой прозрачности в иконках.**
     *   Иконка приложения **не должна** иметь Alpha-канал (прозрачность). Даже если она выглядит квадратной, скрытый слой прозрачности сломает загрузку.
@@ -278,6 +283,16 @@ workflows:
           # Ensure xcode-project sees the profiles
           xcode-project use-profiles --project "$XCODE_PROJECT"
           
+          # DEBUG: Print Info.plist content
+          echo "--- DEBUG: Content of Source Info.plist ---"
+          cat Sources/Info.plist
+          echo "-------------------------------------------"
+          
+          # FORCE VERSIONING using agvtool (The Apple Way)
+          echo "Forcing version bump with agvtool..."
+          agvtool new-version -all 10
+          agvtool new-marketing-version 1.0.2
+          
           # MANUALLY FORCING PROFILE
           echo "Looking for profiles in $HOME/Library/MobileDevice/Provisioning Profiles/"
           PROFILE_PATH=$(find "$HOME/Library/MobileDevice/Provisioning Profiles" -name "*.mobileprovision" | head -n 1)
@@ -315,7 +330,8 @@ workflows:
           # Verify we have a profile argument or rely on project settings
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            --archive-flags "MARKETING_VERSION=1.0.2 CURRENT_PROJECT_VERSION=10"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log

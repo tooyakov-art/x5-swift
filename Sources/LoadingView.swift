@@ -12,18 +12,20 @@ struct LoadingView: View {
                 // X5 Logo Animation
                 HStack(spacing: 5) {
                     Text("X")
-                        .font(.system(size: 60, weight: .black, design: .rounded))
-                        .foregroundColor(.blue)
-                        .scaleEffect(isAnimating ? 1.0 : 0.5)
+                        .font(.system(size: 80, weight: .heavy, design: .default))
+                        .foregroundColor(.white)
+                        .scaleEffect(isAnimating ? 1.0 : 0.8)
+                        .blur(radius: isAnimating ? 0 : 2)
                         .opacity(isAnimating ? 1 : 0)
-                        .animation(Animation.spring(response: 0.5, dampingFraction: 0.6).delay(0.1), value: isAnimating)
+                        .animation(Animation.easeOut(duration: 0.8), value: isAnimating)
                     
                     Text("5")
-                        .font(.system(size: 60, weight: .black, design: .rounded))
+                        .font(.system(size: 80, weight: .heavy, design: .default))
                         .foregroundColor(.white)
-                        .scaleEffect(isAnimating ? 1.0 : 0.5)
+                        .scaleEffect(isAnimating ? 1.0 : 0.8)
+                        .blur(radius: isAnimating ? 0 : 2)
                         .opacity(isAnimating ? 1 : 0)
-                        .animation(Animation.spring(response: 0.5, dampingFraction: 0.6).delay(0.3), value: isAnimating)
+                        .animation(Animation.easeOut(duration: 0.8).delay(0.1), value: isAnimating)
                 }
                 
                 // Loading Indicator

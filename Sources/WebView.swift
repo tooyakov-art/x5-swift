@@ -32,6 +32,9 @@ struct WebView: UIViewRepresentable {
         webView.backgroundColor = .white
         webView.scrollView.backgroundColor = .white
         
+        // CRITICAL: Disable safe area insets so content flows under notch/home bar
+        webView.scrollView.contentInsetAdjustmentBehavior = .never
+        
         return webView
     }
 

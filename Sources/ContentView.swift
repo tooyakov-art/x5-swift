@@ -21,13 +21,14 @@ struct ContentView: View {
                LoginView(navigation: navigation)
             }
             
-            // Loading Screen (Last to be on top)
             if navigation.isLoading {
                 LoadingView()
                     .transition(.opacity)
                     .zIndex(100) // Ensure it's always on top
             }
         }
+        .edgesIgnoringSafeArea(.all)
+        .statusBar(hidden: true) // Optional: Hide status bar for cleaner look
     }
 }
 
