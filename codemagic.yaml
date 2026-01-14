@@ -147,7 +147,7 @@ workflows:
           
           # FORCE VERSIONING using agvtool (The Apple Way)
           echo "Forcing version bump with agvtool..."
-          agvtool new-version -all 19
+          agvtool new-version -all 20
           agvtool new-marketing-version 1.0.3
           
           # MANUALLY FORCING PROFILE
@@ -188,17 +188,21 @@ workflows:
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME" \
-            --archive-flags "MARKETING_VERSION=1.0.3 CURRENT_PROJECT_VERSION=19"
+            --archive-flags "MARKETING_VERSION=1.0.3 CURRENT_PROJECT_VERSION=20"
       - name: Upload to App Store (No Wait)
         script: |
           mkdir -p ~/.appstoreconnect/private_keys
-          echo "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_IDENTIFIER.p8
+          
+          # Use printf to preserve newlines strictly
+          printf "%s" "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_IDENTIFIER.p8
+          
+          # Debug: check if file is empty (without showing secret)
+          ls -l ~/.appstoreconnect/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_IDENTIFIER.p8
           
           IPA_PATH=$(find build/ios/ipa -name "*.ipa" | head -n 1)
           echo "Found IPA: $IPA_PATH"
           
           echo "Uploading to App Store Connect (TestFlight)..."
-          # altool uploads to TestFlight but does NOT wait for processing
           xcrun altool --upload-app \
             --type ios \
             --file "$IPA_PATH" \
