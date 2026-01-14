@@ -5,7 +5,7 @@ struct ContentView: View {
     @Environment(\.scenePhase) var scenePhase
     @State private var reloadTrigger = UUID()
     
-    // Tab Selection
+    // Tab Selection (Visual only, Logic is in Web)
     @State private var selectedTab: Int = 0
     
     var body: some View {
@@ -13,61 +13,49 @@ struct ContentView: View {
             // Background
             Color.black.edgesIgnoringSafeArea(.all)
             
-            // CONTENT LAYER
-            Group {
-                switch selectedTab {
-                case 0:
-                    // HOME: WebView
-                    ZStack {
-                        Color.white.edgesIgnoringSafeArea(.all)
-                        WebView(url: Config.targetURL, reloadTrigger: $reloadTrigger, navigation: navigation)
+            // CONTENT: Always the WebView
+            WebView(url: Config.targetURL, reloadTrigger: $reloadTrigger, navigation: navigation)
+                .edgesIgnoringSafeArea(.all)
+                .padding(.bottom, 0) // Web handles its own padding if needed, or we overlap
+            
+            // CUSTOM LIQUID GLASS TAB BAR
+            VStack {
+                Spacer()
+                
+                GlassEffectContainer {
+                    HStack(spacing: 0) {
+                        TabButton(icon: "house.fill", isSelected: selectedTab == 0) {
+                            selectedTab = 0
+                            navigation.sendTabEvent(index: 0)
+                        }
+                        TabButton(icon: "magnifyingglass", isSelected: selectedTab == 1) {
+                            selectedTab = 1
+                            navigation.sendTabEvent(index: 1)
+                        }
+                        TabButton(icon: "bell.fill", isSelected: selectedTab == 2) {
+                            selectedTab = 2
+                            navigation.sendTabEvent(index: 2)
+                        }
+                        TabButton(icon: "person.fill", isSelected: selectedTab == 3) {
+                            selectedTab = 3
+                            navigation.sendTabEvent(index: 3)
+                        }
                     }
-                    
-                case 1:
-                    // SEARCH / EXPLORE
-                    DummyGlassView(title: "Explore", icon: "magnifyingglass", color: .purple)
-                    
-                case 2:
-                    // NOTIFICATIONS
-                    DummyGlassView(title: "Updates", icon: "bell.fill", color: .blue)
-                    
-                case 3:
-                    // PROFILE
-                    DummyGlassView(title: "Profile", icon: "person.crop.circle", color: .orange)
-                    
-                default:
-                    Text("Error")
+                    .padding(.vertical, 20)
+                    .padding(.horizontal, 24)
+                    .glassEffect(.regular.tint(.black.opacity(0.6)), in: Capsule())
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 34) // Adjust for Home Indicator
                 }
             }
-            .edgesIgnoringSafeArea(.all)
-            .padding(.bottom, 80) // Space for TabBar
+            .edgesIgnoringSafeArea(.bottom)
             
-            // Native Overlays (kept from before)
+            // Native Overlays
             if navigation.showPayment { PaymentView(navigation: navigation) }
             if navigation.showLogin { LoginView(navigation: navigation) }
             if navigation.isLoading { LoadingView().transition(.opacity).zIndex(100) }
-            
-            // CUSTOM GLASS TAB BAR
-            VStack {
-                Spacer()
-                HStack(spacing: 0) {
-                    TabButton(icon: "house.fill", isSelected: selectedTab == 0) { selectedTab = 0 }
-                    TabButton(icon: "magnifyingglass", isSelected: selectedTab == 1) { selectedTab = 1 }
-                    TabButton(icon: "bell.fill", isSelected: selectedTab == 2) { selectedTab = 2 }
-                    TabButton(icon: "person.fill", isSelected: selectedTab == 3) { selectedTab = 3 }
-                }
-                .padding(.vertical, 16)
-                .padding(.horizontal, 20)
-                .background(.ultraThinMaterial)
-                .cornerRadius(30)
-                .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 30)
-            }
         }
-        .edgesIgnoringSafeArea(.bottom) // Allow TabBar to float
         .statusBar(hidden: true)
-        // .onChange ... disabled
     }
 }
 
@@ -81,44 +69,22 @@ struct TabButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 24, weight: isSelected ? .bold : .regular))
-                .foregroundColor(isSelected ? .white : .gray.opacity(0.6))
+                .font(.system(size: 24, weight: isSelected ? .black : .regular)) // Bolder if selected
+                .foregroundColor(isSelected ? .black : .white.opacity(0.6))
+                .frame(width: 50, height: 50)
+                .background(
+                    Circle()
+                        .fill(isSelected ? Color.white : Color.clear)
+                        .shadow(color: isSelected ? Color.white.opacity(0.4) : .clear, radius: 8, x: 0, y: 0)
+                )
                 .frame(maxWidth: .infinity)
-                .scaleEffect(isSelected ? 1.2 : 1.0)
-                .animation(.spring(), value: isSelected)
+                .scaleEffect(isSelected ? 1.0 : 0.9)
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
         }
     }
 }
 
-struct DummyGlassView: View {
-    let title: String
-    let icon: String
-    let color: Color
-    
-    var body: some View {
-        ZStack {
-            // Background Gradient
-            LinearGradient(gradient: Gradient(colors: [color.opacity(0.8), Color.black]), startPoint: .top, endPoint: .bottom)
-                .edgesIgnoringSafeArea(.all)
-            
-            VStack(spacing: 30) {
-                Image(systemName: icon)
-                    .font(.system(size: 80))
-                    .foregroundColor(.white)
-                    .shadow(color: .white.opacity(0.5), radius: 20)
-                
-                Text(title)
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-                
-                LiquidGlassButton(title: "Action Button", icon: "sparkles") {
-                    print("Glass Button Tapped")
-                }
-                .padding(.horizontal, 40)
-            }
-        }
-    }
-}
+// Removed DummyGlassView as it is no longer used
 
 // Minimal placeholders for native views
 struct PaymentView: View {

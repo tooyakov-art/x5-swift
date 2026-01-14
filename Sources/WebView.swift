@@ -9,6 +9,13 @@ class NavigationManager: ObservableObject {
     @Published var showLogin: Bool = false
     @Published var isLoading: Bool = true 
     weak var webView: WKWebView? 
+    
+    func sendTabEvent(index: Int) {
+        let js = "window.postMessage(JSON.stringify({ type: 'TAB_SELECTED', payload: { index: \(index) } }), '*')"
+        DispatchQueue.main.async {
+            self.webView?.evaluateJavaScript(js)
+        }
+    }
 }
 
 // MARK: - WebView wrapper
@@ -188,21 +195,36 @@ struct WebView: UIViewRepresentable {
             print("Native Google Login Requested")
         }
 
+        // MARK: - Outgoing Events
+        
         func sendAuthSuccess(uid: String, email: String, displayName: String, photoURL: String) {
+            let payload: [String: Any] = [
+                "uid": uid,
+                "email": email,
+                "displayName": displayName,
+                "photoURL": photoURL
+            ]
+            sendEventToWeb(type: "AUTH_SUCCESS", payload: payload)
+        }
+        
+        func sendTabSelected(index: Int) {
+            // Sends TAB_SELECTED event to web so it can navigate
+            sendEventToWeb(type: "TAB_SELECTED", payload: ["index": index])
+        }
+        
+        func sendEventToWeb(type: String, payload: [String: Any]) {
             let jsonDict: [String: Any] = [
-                "type": "AUTH_SUCCESS",
-                "payload": [
-                    "uid": uid,
-                    "email": email,
-                    "displayName": displayName,
-                    "photoURL": photoURL
-                ]
+                "type": type,
+                "payload": payload
             ]
             
             if let data = try? JSONSerialization.data(withJSONObject: jsonDict, options: []),
                let jsonString = String(data: data, encoding: .utf8) {
-                // Execute JS to send data back to Web
-                self.parent.navigation.webView?.evaluateJavaScript("window.postMessage(\(jsonString), '*')")
+                
+                print("Sending Event to Web -> Type: \(type)")
+                DispatchQueue.main.async {
+                    self.parent.navigation.webView?.evaluateJavaScript("window.postMessage(\(jsonString), '*')")
+                }
             }
         }
         

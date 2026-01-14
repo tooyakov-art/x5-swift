@@ -16,34 +16,9 @@ struct LiquidGlassButton: View {
                 Text(title)
                     .font(.system(size: 18, weight: .bold, design: .rounded))
             }
-            .foregroundColor(.white)
-            .padding(.vertical, 16)
-            .padding(.horizontal, 24)
             .frame(maxWidth: .infinity)
-            .background(
-                ZStack {
-                    // Glass Effect
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(Color.white.opacity(0.1))
-                    
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(
-                            LinearGradient(
-                                gradient: Gradient(colors: [
-                                    Color.white.opacity(0.6),
-                                    Color.white.opacity(0.1)
-                                ]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1
-                        )
-                }
-                .background(.ultraThinMaterial) // Native iOS Blur
-                .cornerRadius(20)
-                .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 10)
-            )
         }
+        .buttonStyle(.glass)
     }
 }
 
